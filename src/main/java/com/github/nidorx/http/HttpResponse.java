@@ -1,6 +1,7 @@
 package com.github.nidorx.http;
 
-import com.github.nidorx.http.util.ObjectMapper;
+
+import com.google.gson.Gson;
 
 import java.net.CookieManager;
 import java.util.HashMap;
@@ -12,7 +13,7 @@ import java.util.Map;
  */
 public class HttpResponse {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Gson OBJECT_MAPPER = new Gson();
 
     public int statusCode;
 
@@ -26,14 +27,14 @@ public class HttpResponse {
         if (content == null || content.isEmpty()) {
             return null;
         }
-        return OBJECT_MAPPER.readValue(content, HashMap.class);
+        return OBJECT_MAPPER.fromJson(content, HashMap.class);
     }
 
     public <T> T asJson(Class<T> type) throws Exception {
         if (content == null || content.isEmpty()) {
             return null;
         }
-        return OBJECT_MAPPER.readValue(content, type);
+        return OBJECT_MAPPER.fromJson(content, type);
     }
 
     public boolean isSuccess() {
