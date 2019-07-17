@@ -21,6 +21,8 @@ public class HttpResponse {
 
     public String content;
 
+    public byte[] data;
+
     public CookieManager cookieManager;
 
     public Map<String, Object> asJson() throws Exception {

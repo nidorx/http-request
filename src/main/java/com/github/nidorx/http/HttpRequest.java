@@ -20,36 +20,24 @@ import java.util.zip.GZIPInputStream;
  */
 public final class HttpRequest {
 
-    /**
-     * Permite a depuração dos detalhes da requisição sendo efetuada
-     */
-    public static boolean DEBUG = false;
-
     public static final String HEADER_HOST = "Host";
-
     public static final String HEADER_COOKIE = "Cookie";
-
     public static final String HEADER_ACCEPT = "Accept";
-
     public static final String HEADER_ORIGIN = "Origin";
-
     public static final String HEADER_USER_AGENT = "User-Agent";
-
     public static final String HEADER_SET_COOKIE = "Set-Cookie";
-
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
-
     public static final String HEADER_AUTHORIZATION = "Authorization";
-
     public static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
-
     public static final String HEADER_CONTENT_LANGUAGE = "Content-Language";
-
     /**
      * Salva a compilação dos regex usados para fazer alteração no PATH de endpoints
      */
     private static final Map<String, Pattern> PATH_REGEX_CACHED = new ConcurrentHashMap<>();
-
+    /**
+     * Permite a depuração dos detalhes da requisição sendo efetuada
+     */
+    public static boolean DEBUG = false;
     private final String url;
 
     private final Map<String, String> data = new HashMap<>();
@@ -61,6 +49,8 @@ public final class HttpRequest {
     private final Map<String, List<String>> query = new HashMap<>();
 
     private int timeout;
+
+    private boolean binary;
 
     private String method;
 
@@ -178,6 +168,18 @@ public final class HttpRequest {
      */
     public HttpRequest timeout(final int timeout) {
         this.timeout = timeout;
+        return this;
+    }
+
+
+    /**
+     * Define que o resultado esperado é um binário. Ex. Download
+     *
+     * @param binary
+     * @return
+     */
+    public HttpRequest binary(final boolean binary) {
+        this.binary = binary;
         return this;
     }
 
@@ -551,9 +553,6 @@ public final class HttpRequest {
             }
 
 
-            // Accept-Encoding : gzip
-            reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-
             // Obtém os headers da conexão
             response.headers = new HashMap<>(connection.getHeaderFields());
 
@@ -582,14 +581,32 @@ public final class HttpRequest {
             // Seta a referencia para o gerenciador de cookie usado na resposta
             response.cookieManager = this.cookieManager;
 
-            in = new BufferedReader(reader);
-            final StringBuilder body = new StringBuilder();
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                body.append(inputLine);
-                body.append('\r');
+            if (this.binary) {
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+                int nRead;
+                byte[] data = new byte[16384];
+
+                while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                    buffer.write(data, 0, nRead);
+                }
+
+                response.data = buffer.toByteArray();
+            } else {
+
+                // Accept-Encoding : gzip
+                reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+
+                in = new BufferedReader(reader);
+                final StringBuilder body = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    body.append(inputLine);
+                    body.append('\r');
+                }
+                response.content = body.toString();
             }
-            response.content = body.toString();
+
 
             return response;
         } finally {

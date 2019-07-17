@@ -1,6 +1,7 @@
 .idea
 target/
 pom.xml.tag
+http-request.iml
 pom.xml.releaseBackup
 pom.xml.versionsBackup
 pom.xml.next
