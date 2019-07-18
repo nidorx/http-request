@@ -1,6 +1,6 @@
 [![](https://jitpack.io/v/nidorx/http-request.svg)](https://jitpack.io/#nidorx/http-request)
 
-# http-request  [EM DESENVOLVIMENTO]
+# http-request
 
 A very small (160KB, zero dependency) HTTP client for Java using HttpURLConnection
 
