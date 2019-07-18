@@ -450,7 +450,7 @@ public final class HttpRequest {
     /**
      * Executa a requisição
      */
-    private <T> HttpResponse executeRequest() throws ProtocolException, MalformedURLException, IOException {
+    private <T> HttpResponse executeRequest() throws IOException {
         final String finalUrl = generateFinalUrl();
 
         Reader reader = null;

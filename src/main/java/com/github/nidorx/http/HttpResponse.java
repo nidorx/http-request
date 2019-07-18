@@ -1,9 +1,12 @@
 package com.github.nidorx.http;
 
 
+import com.github.nidorx.http.util.ParameterizedTypeReference;
 import com.google.gson.Gson;
 
+import java.lang.reflect.Type;
 import java.net.CookieManager;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,18 +28,40 @@ public class HttpResponse {
 
     public CookieManager cookieManager;
 
-    public Map<String, Object> asJson() throws Exception {
+
+    public Map<String, Object> fromJson() throws Exception {
         if (content == null || content.isEmpty()) {
             return null;
         }
         return OBJECT_MAPPER.fromJson(content, HashMap.class);
     }
 
-    public <T> T asJson(Class<T> type) throws Exception {
+    public <T> T fromJson(Class<T> classOfT) throws Exception {
         if (content == null || content.isEmpty()) {
             return null;
         }
-        return OBJECT_MAPPER.fromJson(content, type);
+        return OBJECT_MAPPER.fromJson(content, classOfT);
+    }
+
+    public <T> T fromJson(Type typeOfT) throws Exception {
+        if (content == null || content.isEmpty()) {
+            return null;
+        }
+        return OBJECT_MAPPER.fromJson(content, typeOfT);
+    }
+
+    public <T> T fromJson(ParameterizedTypeReference<T> parameterizedTypeReferenceOfT) throws Exception {
+        if (content == null || content.isEmpty()) {
+            return null;
+        }
+        return OBJECT_MAPPER.fromJson(content, parameterizedTypeReferenceOfT.getType());
+    }
+
+    public List<Map<String, Object>> fromJsonToList() throws Exception {
+        if (content == null || content.isEmpty()) {
+            return null;
+        }
+        return OBJECT_MAPPER.fromJson(content, ArrayList.class);
     }
 
     public boolean isSuccess() {
