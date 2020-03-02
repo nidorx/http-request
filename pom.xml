@@ -16,11 +16,6 @@
 
     <description>A very small HTTP client for Java using HttpURLConnection</description>
 
-    <prerequisites>
-        <maven>3.5.2</maven>
-    </prerequisites>
-
-
     <contributors>
         <contributor>
             <name>Alex Rodin</name>
@@ -46,14 +41,14 @@
         <repository>
             <id>Central</id>
             <name>Maven Repository</name>
-            <url>http://repo1.maven.org/maven2</url>
+            <url>https://repo1.maven.org/maven2</url>
             <layout>default</layout>
         </repository>
 
         <repository>
             <id>central</id>
             <name>Central Repository</name>
-            <url>http://repo.maven.apache.org/maven2</url>
+            <url>https://repo.maven.apache.org/maven2</url>
             <layout>default</layout>
             <snapshots>
                 <enabled>false</enabled>
@@ -64,7 +59,7 @@
     <pluginRepositories>
         <pluginRepository>
             <id>central</id>
-            <url>http://repo1.maven.org/maven2</url>
+            <url>https://repo1.maven.org/maven2</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -73,9 +68,9 @@
 
     <dependencies>
         <!--<dependency>-->
-            <!--<groupId>com.fasterxml.jackson.core</groupId>-->
-            <!--<artifactId>jackson-databind</artifactId>-->
-            <!--<version>${jackson.version}</version>-->
+        <!--<groupId>com.fasterxml.jackson.core</groupId>-->
+        <!--<artifactId>jackson-databind</artifactId>-->
+        <!--<version>${jackson.version}</version>-->
         <!--</dependency>-->
         <dependency>
             <groupId>com.google.code.gson</groupId>
