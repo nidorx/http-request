@@ -2,7 +2,9 @@ package com.github.nidorx.http;
 
 import com.github.nidorx.http.util.BiConsumerThrowable;
 import com.github.nidorx.http.util.Callback;
+import com.google.gson.Gson;
 
+import javax.activation.UnsupportedDataTypeException;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
@@ -21,15 +23,30 @@ import java.util.zip.GZIPInputStream;
 public final class HttpRequest {
 
     public static final String HEADER_HOST = "Host";
+
     public static final String HEADER_COOKIE = "Cookie";
+
     public static final String HEADER_ACCEPT = "Accept";
+
     public static final String HEADER_ORIGIN = "Origin";
+
     public static final String HEADER_USER_AGENT = "User-Agent";
+
     public static final String HEADER_SET_COOKIE = "Set-Cookie";
+
     public static final String HEADER_CONTENT_TYPE = "Content-Type";
+
     public static final String HEADER_AUTHORIZATION = "Authorization";
+
     public static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
+
     public static final String HEADER_CONTENT_LANGUAGE = "Content-Language";
+
+    public static final String APPLICATION_JSON = "application/json; charset=utf-8";
+
+    public static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded; charset=UTF-8";
+
+    private static final Gson OBJECT_MAPPER = new Gson();
     /**
      * Salva a compilação dos regex usados para fazer alteração no PATH de endpoints
      */
@@ -38,15 +55,16 @@ public final class HttpRequest {
      * Permite a depuração dos detalhes da requisição sendo efetuada
      */
     public static boolean DEBUG = false;
-    private final String url;
 
-    private final Map<String, String> data = new HashMap<>();
+    private final String url;
 
     private final Map<String, String> path = new HashMap<>();
 
     private final Map<String, String> headers = new HashMap<>();
 
     private final Map<String, List<String>> query = new HashMap<>();
+
+    private Object data;
 
     private int timeout;
 
@@ -76,7 +94,7 @@ public final class HttpRequest {
         this.method = "GET";
         // Timeout default de 30 segundos
         this.timeout = 30000;
-        this.contentType = "application/x-www-form-urlencoded; charset=UTF-8";
+        this.contentType = APPLICATION_X_WWW_FORM_URLENCODED;
         this.userAgent = UserAgentList.getRandom();
         this.cookieManager = new CookieManager();
     }
@@ -117,30 +135,44 @@ public final class HttpRequest {
     /**
      * Gera os bytes quando o tipo de requisição for um POST ou PUT
      *
-     * @param data
+     * @param postData
      * @return
      */
-    private static byte[] generatePostData(final Map<String, String> data) throws UnsupportedEncodingException {
-        StringBuilder dataString = new StringBuilder();
-        String charset = StandardCharsets.UTF_8.toString();
-        if (data != null) {
-            boolean first = true;
-            for (Map.Entry<String, String> param : data.entrySet()) {
-                if (first) {
-                    first = false;
-                } else {
-                    dataString.append('&');
-                }
-                dataString.append(URLEncoder.encode(param.getKey(), charset));
-                dataString.append('=');
-                dataString.append(URLEncoder.encode(param.getValue(), charset));
+    private static byte[] generatePostData(Object postData, final String contentType) throws IOException {
+
+        if (APPLICATION_JSON.equals(contentType)) {
+            return OBJECT_MAPPER.toJson(postData).getBytes(StandardCharsets.UTF_8);
+        } else if (APPLICATION_X_WWW_FORM_URLENCODED.equals(contentType)) {
+            if (!(postData instanceof Map)) {
+                throw new UnsupportedDataTypeException("Post data need to be Map<String, String>");
             }
+
+            Map<String, String> data = (Map<String, String>) postData;
+            StringBuilder dataString = new StringBuilder();
+            String charset = StandardCharsets.UTF_8.toString();
+            if (data != null) {
+                boolean first = true;
+                for (Map.Entry<String, String> param : data.entrySet()) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        dataString.append('&');
+                    }
+                    dataString.append(URLEncoder.encode(param.getKey(), charset));
+                    dataString.append('=');
+                    dataString.append(URLEncoder.encode(param.getValue(), charset));
+                }
+            }
+
+            return dataString.toString().getBytes(StandardCharsets.UTF_8);
         }
-        return dataString.toString().getBytes(StandardCharsets.UTF_8);
+
+        throw new UnsupportedDataTypeException("Invalid content-type");
     }
 
-    private static void debugPostData(final Map<String, String> data) {
-        if (DEBUG && data != null) {
+    private static void debugPostData(final Object postData) {
+        if (DEBUG && postData != null && postData instanceof Map) {
+            Map<String, String> data = (Map<String, String>) postData;
             System.out.println("Form Data");
             for (Map.Entry<String, String> param : data.entrySet()) {
                 System.out.println("    " + param.getKey() + ": " + param.getValue());
@@ -318,6 +350,24 @@ public final class HttpRequest {
      * <p>
      * Object must be Key/Value pairs.
      *
+     * @param data
+     * @return
+     */
+    public HttpRequest data(final Object data) {
+        if (data == null) {
+            return this;
+        }
+
+        this.data = data;
+
+        return this;
+    }
+
+    /**
+     * Data to be sent to the server.
+     * <p>
+     * Object must be Key/Value pairs.
+     *
      * @param key
      * @param value
      * @return
@@ -326,7 +376,11 @@ public final class HttpRequest {
         if (key == null || key.isEmpty()) {
             return this;
         }
-        this.data.put(key, value);
+
+        if (!(this.data instanceof Map)) {
+            this.data = new HashMap<String, String>();
+        }
+        ((Map<String, String>) this.data).put(key, value);
         return this;
     }
 
@@ -342,7 +396,11 @@ public final class HttpRequest {
         if (data == null || data.isEmpty()) {
             return this;
         }
-        this.data.putAll(data);
+        if (!(this.data instanceof Map)) {
+            this.data = new HashMap<String, String>();
+        }
+
+        ((Map<String, String>) this.data).putAll(data);
         return this;
     }
 
@@ -520,7 +578,7 @@ public final class HttpRequest {
             // Enviar dados, formulário
             if (method.equals("POST") || method.equals("PUT")) {
                 connection.setDoOutput(true);
-                final byte[] data = generatePostData(this.data);
+                final byte[] data = generatePostData(this.data, this.contentType);
                 connection.setRequestProperty("Content-Length", Integer.toString(data.length));
 
                 if (DEBUG) {
