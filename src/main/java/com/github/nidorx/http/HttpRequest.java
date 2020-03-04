@@ -140,6 +140,10 @@ public final class HttpRequest {
      */
     private static byte[] generatePostData(Object postData, final String contentType) throws IOException {
 
+        if (postData == null) {
+            return null;
+        }
+
         if (APPLICATION_JSON.equals(contentType)) {
             return OBJECT_MAPPER.toJson(postData).getBytes(StandardCharsets.UTF_8);
         } else if (APPLICATION_X_WWW_FORM_URLENCODED.equals(contentType)) {
@@ -170,8 +174,13 @@ public final class HttpRequest {
         throw new UnsupportedDataTypeException("Invalid content-type");
     }
 
-    private static void debugPostData(final Object postData) {
-        if (DEBUG && postData != null && postData instanceof Map) {
+    private static void debugPostData(final Object postData, final String contentType) {
+        if (APPLICATION_JSON.equals(contentType)) {
+            System.out.println("Form Data (JSON)");
+            System.out.println("    " + OBJECT_MAPPER.toJson(postData));
+            OBJECT_MAPPER.toJson(postData);
+            System.out.println("------------------------------------------------------");
+        } else if (postData instanceof Map) {
             Map<String, String> data = (Map<String, String>) postData;
             System.out.println("Form Data");
             for (Map.Entry<String, String> param : data.entrySet()) {
@@ -581,19 +590,16 @@ public final class HttpRequest {
                 connection.setConnectTimeout(this.timeout);
             }
 
-
             // Enviar dados, formulário
-            if (method.equals("POST") || method.equals("PUT")) {
+            if ((method.equals("POST") || method.equals("PUT")) && this.data != null) {
                 connection.setDoOutput(true);
                 final byte[] data = generatePostData(this.data, this.contentType);
                 connection.setRequestProperty("Content-Length", Integer.toString(data.length));
 
                 if (DEBUG) {
                     System.out.println("    Content-Length: " + data.length);
+                    debugPostData(this.data, this.contentType);
                 }
-
-                debugPostData(this.data);
-
 
                 out = new DataOutputStream(connection.getOutputStream());
                 out.write(data);
