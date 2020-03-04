@@ -518,6 +518,13 @@ public final class HttpRequest {
         try {
             final URL connUrl = new URL(finalUrl);
             final HttpURLConnection connection = (HttpURLConnection) connUrl.openConnection();
+
+            if (method.equals("PATCH")) {
+                // https://stackoverflow.com/a/32503192
+                connection.setRequestProperty("X-HTTP-Method-Override", "PATCH");
+                method = "POST";
+            }
+
             connection.setRequestMethod(method);
 
             connection.setInstanceFollowRedirects(false);
