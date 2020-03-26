@@ -19,7 +19,7 @@ A very small (160KB, zero dependency) HTTP client for Java using HttpURLConnecti
     <dependency>
         <groupId>com.github.nidorx</groupId>
         <artifactId>http-request</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.6</version>
     </dependency>
 </dependencies>
 ```

@@ -2,7 +2,7 @@ package com.github.nidorx.http;
 
 
 import com.github.nidorx.http.util.ParameterizedTypeReference;
-import com.google.gson.Gson;
+import com.github.nidorx.http.gson.Gson;
 
 import java.lang.reflect.Type;
 import java.net.CookieManager;

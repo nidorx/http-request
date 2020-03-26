@@ -2,7 +2,7 @@ package com.github.nidorx.http;
 
 import com.github.nidorx.http.util.BiConsumerThrowable;
 import com.github.nidorx.http.util.Callback;
-import com.google.gson.Gson;
+import com.github.nidorx.http.gson.Gson;
 
 import javax.activation.UnsupportedDataTypeException;
 import java.io.*;
