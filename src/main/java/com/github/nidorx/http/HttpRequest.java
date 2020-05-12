@@ -109,7 +109,7 @@ public final class HttpRequest {
      * @param queryParams
      * @return
      */
-    private static String generateQueryString(final Map<String, List<String>> queryParams) throws UnsupportedEncodingException {
+    public static String getQueryString(final Map<String, List<String>> queryParams) throws UnsupportedEncodingException {
         StringBuilder queryString = new StringBuilder();
         String charset = StandardCharsets.UTF_8.toString();
         if (queryParams != null) {
@@ -232,16 +232,6 @@ public final class HttpRequest {
      */
     public HttpRequest userAgent(final String userAgent) {
         this.userAgent = userAgent;
-        return this;
-    }
-
-    /**
-     * Define o protocolo da requisição, default https
-     *
-     * @param protocol
-     * @return
-     */
-    public HttpRequest protocol(final String protocol) {
         return this;
     }
 
@@ -515,10 +505,28 @@ public final class HttpRequest {
     }
 
     /**
+     * Gera a url final de uma requisição, adicionando os query params e path params necessários
+     *
+     * @return
+     */
+    public String getFinalUrl() throws UnsupportedEncodingException {
+        String finalUrl = url;
+        for (Map.Entry<String, String> param : path.entrySet()) {
+            String key = param.getKey();
+            if (!PATH_REGEX_CACHED.containsKey(key)) {
+                PATH_REGEX_CACHED.put(key, Pattern.compile("\\{" + key + "\\}"));
+            }
+            finalUrl = PATH_REGEX_CACHED.get(key).matcher(finalUrl).replaceAll(param.getValue());
+        }
+        finalUrl += getQueryString(query);
+        return finalUrl;
+    }
+
+    /**
      * Executa a requisição
      */
     private <T> HttpResponse executeRequest() throws IOException {
-        final String finalUrl = generateFinalUrl();
+        final String finalUrl = getFinalUrl();
 
         Reader reader = null;
         BufferedReader in = null;
@@ -695,26 +703,5 @@ public final class HttpRequest {
             }
         }
     }
-
-    /**
-     * Gera a url final de uma requisição, adicionando os query params e path params necessários
-     *
-     * @return
-     */
-    private String generateFinalUrl() throws UnsupportedEncodingException {
-//            String finalUrl = protocol + "://" + url.replaceFirst("^[^:]+:\\/\\/", "");
-        String finalUrl = url;
-        for (Map.Entry<String, String> param : path.entrySet()) {
-            String key = param.getKey();
-            if (!PATH_REGEX_CACHED.containsKey(key)) {
-                PATH_REGEX_CACHED.put(key, Pattern.compile("\\{" + key + "\\}"));
-            }
-            finalUrl = PATH_REGEX_CACHED.get(key).matcher(finalUrl).replaceAll(param.getValue());
-        }
-        finalUrl += generateQueryString(query);
-        return finalUrl;
-    }
-
-
 }
 
